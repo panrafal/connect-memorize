@@ -2,6 +2,8 @@ var memorize = require('../'),
 	connect = require('connect')
 	;
 
+console.log('This is obviously not finished... Connect test harness does not work on windows :(');
+
 describe('memorize', function() {
 	var app;
 	function createServer(memopts) {
