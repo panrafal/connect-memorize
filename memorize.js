@@ -67,7 +67,7 @@ module.exports = function(options) {
                 partFile = storageFile + '.part';
 
             var memorize = function(data, enc) {
-                if (file === false) return;
+                if (file === false || !data) return;
                 if (!file) {
                     // lazy initialize file on first write
                     mkdirp.sync(path.dirname(partFile));
@@ -82,7 +82,7 @@ module.exports = function(options) {
             res.end = function(data, enc, cb) {
                 if (data) memorize(data, enc);
                 if (file) {
-                    file.end(null, null, function() {
+                    file.end(function() {
                         try {
                             fs.renameSync(partFile, storageFile);
                         } catch (e) {
