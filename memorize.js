@@ -1,12 +1,11 @@
-var //url = require('url'),
-        fs = require('fs'),
-        mkdirp = require('mkdirp'),
-        path = require('path'),
-        extend = require('extend');
+'use strict';
+
+var fs = require('fs'),
+    mkdirp = require('mkdirp'),
+    path = require('path'),
+    extend = require('extend');
 
 module.exports = function(options) {
-
-    'use strict';
 
     options = extend({
         /* Function(req) or regular expression to match the url */
@@ -14,14 +13,16 @@ module.exports = function(options) {
         memorize: true,
         recall: false,
         storageDir: 'offline',
-        normalize: /^.+?\/\/.+?(\/.*$)/
+        /* Function(url) or regular expression to normalize the url. 
+        If regular expression is used, the first subpattern will be used as a new url */
+        normalize: /^.*?\/\/.+?(\/.*$)/ // remove host
     }, options);
 
     if (!options.storageDir) throw 'options.storageDir is not defined!';
 
     return function(req, res, next) {
         // console.log(req);
-        if ('GET' != req.method && 'HEAD' != req.method) return next();
+        if ('GET' !== req.method/* && 'HEAD' != req.method*/) return next();
 
         if (typeof options.match === 'function') {
             if (!options.match(req)) {
@@ -53,7 +54,6 @@ module.exports = function(options) {
             // try to serve offline file
             if (fs.existsSync(storageFile)) {
                 fs.createReadStream(storageFile).pipe(res);
-
                 return;
             }
         }
@@ -62,10 +62,12 @@ module.exports = function(options) {
             // memorize the response
             var _write = res.write,
                 _end = res.end,
-                file = null,
+                _writeHead = res.writeHead,
+                file,
                 partFile = storageFile + '.part';
 
             var memorize = function(data, enc) {
+                if (file === false) return;
                 if (!file) {
                     // lazy initialize file on first write
                     mkdirp.sync(path.dirname(partFile));
@@ -80,13 +82,27 @@ module.exports = function(options) {
             res.end = function(data, enc, cb) {
                 if (data) memorize(data, enc);
                 if (file) {
-                    file.end();
-                    try {
-                        fs.renameSync(partFile, storageFile);
-                    } catch (e) {}
+                    file.end(null, null, function() {
+                        try {
+                            fs.renameSync(partFile, storageFile);
+                        } catch (e) {
+                            console.log('Can\'t rename ', partFile, ' to ', storageFile);
+                        }
+                    });
                 }
                 return _end.call(this, data, enc, cb);
             }
+            res.writeHead = function(code, reason, headers) {
+                if (code !== 200) {
+                    console.log('Can\'t memorize ', req.url, ', response code:', code);
+                    if (!file) file = false;
+                }
+                return _writeHead.call(this, code, reason, headers);
+            };
+            res.on('error', function (err) {
+                console.log('Can\'t memorize ', req.url, ', response error:', err);
+                if (!file) file = false;
+            });
         }
 
         next();

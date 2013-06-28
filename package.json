@@ -1,7 +1,7 @@
 {
   "name": "connect-memorize",
   "main": "./memorize.js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "connect-memorize allows to store selected middleware responses and serve them later - read - offline mode!",
   "author": {
     "name": "Rafal Lindemann",

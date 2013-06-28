@@ -5,7 +5,10 @@ connect-memorize [![Build Status](https://travis-ci.org/panrafal/connect-memoriz
 This is very handy if:
 
 - you want to have an offline functionality for your backend stuff, especially proxied requests in grunt. 
-- you want to store anything your server replied
+- you want to store anything your server replied.
+
+Only GET requests with 200 response code get stored. So if you want to store everything, be shure to
+clear the browser's cache beforehand.
 
 # Usage
 
@@ -32,6 +35,9 @@ var app = connect()
   }))
   .use(... any middleware ...)
 ```
+
+
+Tests are not yet done...
 
 ## License
 Copyright &copy;2013 Rafal Lindemann
