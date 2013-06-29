@@ -40,3 +40,5 @@ var app = connect()
 ## License
 Copyright &copy;2013 Rafal Lindemann
 Licensed under the MIT license.
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/d257995d9947e47f8d1daac1c86fdd67 "githalytics.com")](http://githalytics.com/panrafal/connect-memorize)
