@@ -81,7 +81,8 @@ module.exports = function(options) {
                     mkdirp.sync(path.dirname(partFile));
                     file = fs.openSync(partFile, 'w');
                 }
-                fs.writeSync(file, data);
+                if (typeof data === 'string') data = new Buffer(data, enc);
+                fs.writeSync(file, data, 0, data.length);
             }  
 
             res.write = function(data, enc) {

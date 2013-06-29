@@ -69,6 +69,50 @@ describe('memorize', function() {
             .expect('Something to recall', done);
     })
 
+    it('should memorize complex data', function(done) {
+        createServer({memorize: true}, /none/);
+        app.use(function(req, res) {
+            res.writeHead(200, {'Content-type': 'text/plain'})
+            res.write('Hello');    
+            res.write(' ');    
+            res.write('world!');    
+            res.end();
+        });
+
+        app.request()
+            .get('/index.html')
+            .expect('Hello world!', function() {
+                fs.readFileSync(dir + '/index.html', 'utf-8').should.equal('Hello world!');
+                done();
+            });
+    }) 
+
+    it('should skip head', function(done) {
+        createServer({memorize: true});
+        app.request()
+            .head('/world.html')
+            .expect('', function() {
+                fs.existsSync(dir + '/world.html').should.equal(false);
+                done();
+            });
+    })    
+
+    it('should handle buffer', function(done) {
+        createServer({memorize: true}, /none/);
+        app.use(function(req, res) {
+                res.write(new Buffer([0x48, 0x65, 0x6c, 0x6c, 0x6f]));
+                res.write(new Buffer([0x20, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21]));
+                res.end();
+            });
+
+        app.request()
+            .get('/buffer')
+            .expect(200, function() {
+                fs.readFileSync(dir + '/buffer', 'utf-8').should.equal('Hello Hello!');
+                done();
+            });
+    })     
+
     it('should skip 404 response without response code', function(done) {
         createServer({memorize: true}, /none/);
         app.request()
