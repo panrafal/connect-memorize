@@ -37,8 +37,6 @@ var app = connect()
 ```
 
 
-Tests are not yet done...
-
 ## License
 Copyright &copy;2013 Rafal Lindemann
 Licensed under the MIT license.

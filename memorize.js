@@ -13,9 +13,10 @@ module.exports = function(options) {
         memorize: true,
         recall: false,
         storageDir: 'offline',
-        /* Function(url) or regular expression to normalize the url. 
+        /* Function(url, req) or regular expression to normalize the url. 
         If regular expression is used, the first subpattern will be used as a new url */
-        normalize: /^.*?\/\/.+?(\/.*$)/ // remove host
+        normalize: /^.*?\/\/.+?(\/.*$)/, // remove host
+        verbose: false
     }, options);
 
     if (!options.storageDir) throw 'options.storageDir is not defined!';
@@ -38,7 +39,7 @@ module.exports = function(options) {
 
         var urlPath = req.url;
         if (typeof options.normalize === 'function') {
-            urlPath = options.normalize(urlPath);
+            urlPath = options.normalize(urlPath, req);
         } else if (options.normalize) {
             urlPath = urlPath.match(options.normalize);
             urlPath = urlPath && urlPath[1] ? urlPath[1] : req.url;
@@ -67,40 +68,41 @@ module.exports = function(options) {
                 partFile = storageFile + '.part';
 
             var memorize = function(data, enc) {
-                if (file === false || !data) return;
+                if (file === false || !data) return; // storing disabled, or no data
+                if (res.statusCode !== 200) {
+                    if (file === undefined) {
+                        if (options.verbose) console.log('Can\'t memorize ', req.url, ', response code:', res.statusCode);
+                        file = false;
+                    }
+                    return;
+                }
                 if (!file) {
                     // lazy initialize file on first write
                     mkdirp.sync(path.dirname(partFile));
-                    file = fs.createWriteStream(partFile, {flags: 'w'});
+                    file = fs.openSync(partFile, 'w');
                 }
-                file.write(data, enc);
+                fs.writeSync(file, data);
             }  
-            res.write = function(data, enc, cb) {
+
+            res.write = function(data, enc) {
                 memorize(data, enc);
-                return _write.call(this, data, enc, cb);
+                return _write.call(this, data, enc);
             }
-            res.end = function(data, enc, cb) {
-                if (data) memorize(data, enc);
+            res.end = function(data, enc) {
+                memorize(data, enc);
                 if (file) {
-                    file.end(function() {
-                        try {
-                            fs.renameSync(partFile, storageFile);
-                        } catch (e) {
-                            console.log('Can\'t rename ', partFile, ' to ', storageFile);
-                        }
-                    });
+                    fs.closeSync(file);
+                    try {
+                        fs.renameSync(partFile, storageFile);
+                    } catch (e) {
+                        console.log('Can\'t rename ', partFile, ' to ', storageFile);
+                    }
                 }
-                return _end.call(this, data, enc, cb);
+                return _end.call(this, data, enc);
             }
-            res.writeHead = function(code, reason, headers) {
-                if (code !== 200) {
-                    console.log('Can\'t memorize ', req.url, ', response code:', code);
-                    if (!file) file = false;
-                }
-                return _writeHead.call(this, code, reason, headers);
-            };
+
             res.on('error', function (err) {
-                console.log('Can\'t memorize ', req.url, ', response error:', err);
+                if (options.verbose) console.log('Can\'t memorize ', req.url, ', response error:', err);
                 if (!file) file = false;
             });
         }

@@ -1,7 +1,7 @@
 {
   "name": "connect-memorize",
   "main": "./memorize.js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "connect-memorize allows to store selected middleware responses and serve them later - read - offline mode!",
   "author": {
     "name": "Rafal Lindemann",
@@ -23,7 +23,8 @@
   "devDependencies": {
     "mocha": "~1.11.0",
     "connect": "~2.8.1",
-    "chai": "~1.7.2"
+    "chai": "~1.7.2",
+    "rimraf": "~2.2.0"
   },
   "scripts": {
     "test": "node node_modules/mocha/bin/mocha"

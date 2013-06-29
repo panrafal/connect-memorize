@@ -1,12 +1,18 @@
 
 /**
- * Module dependencies.
+  Under MIT License
+
+  Copyright (c) 2010 Sencha Inc.
+  Copyright (c) 2011 LearnBoost
+  Copyright (c) 2011 TJ Holowaychuk
  */
 
 var EventEmitter = require('events').EventEmitter
   , methods = ['get', 'post', 'put', 'delete', 'head']
   , connect = require('connect')
   , http = require('http');
+
+require('chai').should();
 
 module.exports = request;
 
